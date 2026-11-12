@@ -2,6 +2,7 @@ import { ref, shallowRef } from "vue";
 import type { Phase, Run } from "../../../shared/session";
 import { secondsAt } from "../../../shared/chart";
 import { AudioTransport } from "../lib/audio";
+const COUNT_IN_BEATS = 4;
 export function usePerformance(
   onTick: (time: number) => void,
   onEnd: () => void,
@@ -9,10 +10,24 @@ export function usePerformance(
   const phase = ref<Phase>("ready"),
     time = ref(0),
     run = shallowRef<Run | null>(null),
-    volume = ref(0.45);
+    volume = ref(0.45),
+    count = ref(0);
   const audio = new AudioTransport();
   let frame = 0;
   let generation = 0;
+  let cancelCountdown: () => void = () => {};
+  function wait(ms: number) {
+    return new Promise<boolean>((resolve) => {
+      const timer = setTimeout(() => {
+        cancelCountdown = () => {};
+        resolve(true);
+      }, ms);
+      cancelCountdown = () => {
+        clearTimeout(timer);
+        resolve(false);
+      };
+    });
+  }
   function tick() {
     if (phase.value !== "playing" || !run.value) return;
     time.value = Math.max(
@@ -31,10 +46,19 @@ export function usePerformance(
   async function start(next: Run) {
     const token = ++generation;
     cancelAnimationFrame(frame);
+    cancelCountdown();
     audio.stop();
     run.value = next;
     time.value = secondsAt(next.start, next.track.bpm);
-    phase.value = "ready";
+    phase.value = "countdown";
+    count.value = COUNT_IN_BEATS;
+    // 四拍准备倒数：实际间隔由曲目节拍与练习速度共同决定，
+    // 不提前消费谱面时间，倒数结束后音乐与判定才进入片段起点
+    const interval = (secondsAt(1, next.track.bpm) / next.speed) * 1000;
+    while (count.value > 0) {
+      if (!(await wait(interval)) || token !== generation) return;
+      count.value--;
+    }
     await audio.play(next, time.value);
     if (token !== generation) return;
     phase.value = "playing";
@@ -56,15 +80,28 @@ export function usePerformance(
   }
   function reset() {
     generation++;
+    cancelCountdown();
     audio.stop();
     cancelAnimationFrame(frame);
     phase.value = "ready";
     time.value = 0;
     run.value = null;
+    count.value = 0;
   }
   function setVolume(v: number) {
     volume.value = v;
     audio.setVolume(v);
   }
-  return { phase, time, run, volume, start, pause, resume, reset, setVolume };
+  return {
+    phase,
+    time,
+    run,
+    volume,
+    count,
+    start,
+    pause,
+    resume,
+    reset,
+    setVolume,
+  };
 }

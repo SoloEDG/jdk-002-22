@@ -9,6 +9,7 @@ const props = defineProps<{
   run: Run | null;
   time: number;
   phase: Phase;
+  countdown: number;
   done: Set<string>;
   held: Set<Lane>;
   feedback: string;
@@ -36,6 +37,11 @@ const notes = computed(() =>
       <h3>READY TO FEEL?</h3>
       <p>戴上耳机，进入你的节奏</p>
       <span>← ↓ ↑ → / D F J K</span>
+    </div>
+    <div v-if="phase === 'countdown'" class="stage-message countdown">
+      <div class="count-number">{{ countdown }}</div>
+      <h3>GET READY</h3>
+      <p>倒数结束后，从片段起点进入</p>
     </div>
     <div v-if="phase === 'paused'" class="stage-message paused">
       <h3>PAUSED</h3>

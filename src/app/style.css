@@ -589,6 +589,13 @@ main {
   height: 100%;
   padding-top: 150px;
 }
+.count-number {
+  font-size: 84px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #bcf366;
+  text-shadow: 0 0 28px #bcf36666;
+}
 .hit-line {
   position: absolute;
   top: 390px;

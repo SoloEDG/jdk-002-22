@@ -1,5 +1,10 @@
 import type { Note, Track } from "./chart";
-export type Phase = "ready" | "playing" | "paused" | "finished";
+export type Phase =
+  | "ready"
+  | "countdown"
+  | "playing"
+  | "paused"
+  | "finished";
 export type Grade = "PERFECT" | "GREAT" | "GOOD" | "MISS";
 export type Hit = { noteId: string; grade: Grade; delta: number; beat: number };
 export type Run = {

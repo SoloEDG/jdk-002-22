@@ -64,6 +64,7 @@ const { library: l, practice: p, judgment: j, records: r, performance: s } = w;
           :run="s.run.value"
           :time="s.time.value"
           :phase="s.phase.value"
+          :countdown="s.count.value"
           :done="j.done.value"
           :held="j.held.value"
           :feedback="j.feedback.value"
